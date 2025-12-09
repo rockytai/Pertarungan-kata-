@@ -9,13 +9,15 @@ interface ButtonProps {
 }
 
 const Button: React.FC<ButtonProps> = ({ onClick, children, variant = "primary", className = "", disabled = false }) => {
-  const baseStyle = "transform active:scale-95 transition-transform font-bold py-3 px-6 rounded-xl border-b-4 uppercase tracking-wider text-sm md:text-base select-none touch-manipulation flex items-center justify-center gap-2";
+  // Changed rounded-xl to rounded-sm, added border-2/4 and roblox-shadow
+  const baseStyle = "transform active:translate-y-1 active:shadow-none transition-all font-bold py-3 px-6 rounded-sm border-2 md:border-4 uppercase tracking-wider text-lg md:text-xl select-none touch-manipulation flex items-center justify-center gap-2 roblox-shadow mb-1";
+  
   const variants = {
-    primary: "bg-yellow-400 hover:bg-yellow-300 text-yellow-900 border-yellow-700",
-    danger: "bg-red-500 hover:bg-red-400 text-white border-red-800",
-    success: "bg-green-500 hover:bg-green-400 text-white border-green-800",
-    secondary: "bg-gray-200 hover:bg-gray-100 text-gray-700 border-gray-400",
-    info: "bg-sky-400 hover:bg-sky-300 text-white border-sky-700"
+    primary: "bg-yellow-400 hover:bg-yellow-300 text-black border-black",
+    danger: "bg-red-600 hover:bg-red-500 text-white border-black",
+    success: "bg-green-500 hover:bg-green-400 text-white border-black",
+    secondary: "bg-gray-200 hover:bg-gray-100 text-gray-800 border-black",
+    info: "bg-sky-400 hover:bg-sky-300 text-white border-black"
   };
 
   return (

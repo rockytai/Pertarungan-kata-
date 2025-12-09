@@ -1,15 +1,27 @@
 import { World, Word } from './types';
 
-export const AVATARS = ["🤴", "👸", "🥷", "🧙‍♂️", "🧚‍♀️", "🦸‍♂️", "🦹‍♀️", "🤖", "🦊", "🦁"];
+export const AVATARS = [
+  "noob", 
+  "bacon", 
+  "guest", 
+  "girl_pink", 
+  "cool_boy", 
+  "ninja", 
+  "knight", 
+  "wizard", 
+  "rich_boy", 
+  "zombie_survivor"
+];
+
 export const TOTAL_LEVELS = 50;
 
 export const WORLDS: World[] = [
   { 
     id: 1, 
-    name: "Kampung Permulaan", 
-    enemy: "Si Bulat", 
+    name: "Kampung Permulaan (新手村)", 
+    enemy: "Si Bulat (小圆怪)", 
     hp: 40, 
-    img: "🌱", 
+    img: "slime", 
     theme: "bg-green-600", 
     bgPattern: "bg-green-500", 
     desc: "Langkah pertama anda.",
@@ -17,10 +29,10 @@ export const WORLDS: World[] = [
   },
   { 
     id: 2, 
-    name: "Hutan Belantara", 
-    enemy: "Harimau Kumbang", 
+    name: "Hutan Belantara (原始森林)", 
+    enemy: "Harimau Kumbang (黑豹)", 
     hp: 80, 
-    img: "🐅", 
+    img: "panther", 
     theme: "bg-emerald-800", 
     bgPattern: "bg-emerald-700", 
     desc: "Awas binatang buas!",
@@ -28,10 +40,10 @@ export const WORLDS: World[] = [
   },
   { 
     id: 3, 
-    name: "Kota Raya", 
-    enemy: "Robot Besi", 
+    name: "Kota Raya (繁华都市)", 
+    enemy: "Robot Besi (铁甲机器人)", 
     hp: 120, 
-    img: "🏙️", 
+    img: "mech", 
     theme: "bg-blue-700", 
     bgPattern: "bg-blue-600", 
     desc: "Dunia moden yang sibuk.",
@@ -39,10 +51,10 @@ export const WORLDS: World[] = [
   },
   { 
     id: 4, 
-    name: "Gunung Berapi", 
-    enemy: "Raksasa Api", 
+    name: "Gunung Berapi (火山地带)", 
+    enemy: "Raksasa Api (火焰怪)", 
     hp: 160, 
-    img: "🌋", 
+    img: "magma", 
     theme: "bg-red-800", 
     bgPattern: "bg-red-700", 
     desc: "Panas dan berbahaya!",
@@ -50,10 +62,10 @@ export const WORLDS: World[] = [
   },
   { 
     id: 5, 
-    name: "Istana Angkasa", 
-    enemy: "Raja Langit", 
+    name: "Istana Angkasa (天空之城)", 
+    enemy: "Raja Langit (天空之王)", 
     hp: 200, 
-    img: "🏰", 
+    img: "king", 
     theme: "bg-purple-800", 
     bgPattern: "bg-purple-700", 
     desc: "Cabaran terakhir.",
