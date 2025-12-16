@@ -142,10 +142,10 @@ function App() {
   if (appState === 'SPLASH') {
       return (
           <div className="h-[100dvh] w-full bg-amber-500 flex flex-col items-center justify-center animate-fadeIn select-none overflow-hidden cursor-pointer" onClick={() => setAppState('USER_SELECT')}>
-              <div className="text-8xl mb-6 animate-bounce drop-shadow-2xl">⚔️</div>
-              <h1 className="text-4xl font-black text-white uppercase tracking-widest drop-shadow-md mb-2 text-center">Pertarungan Kata</h1>
-              <div className="text-amber-800 font-bold uppercase tracking-wide text-sm mb-8">Edisi Bahasa Melayu</div>
-              <div className="animate-pulse text-white font-bold">Tekan untuk Mula</div>
+              <div className="text-9xl mb-8 animate-bounce drop-shadow-2xl">⚔️</div>
+              <h1 className="text-6xl md:text-8xl font-black text-white uppercase tracking-widest drop-shadow-md mb-4 text-center px-4 leading-none">Pertarungan Kata</h1>
+              <div className="text-amber-900 font-bold uppercase tracking-wide text-2xl md:text-3xl mb-12 bg-white/20 px-6 py-2 rounded-sm backdrop-blur-sm">Edisi Bahasa Melayu</div>
+              <div className="animate-pulse text-white font-black text-3xl md:text-5xl tracking-widest bg-black/20 px-8 py-4 rounded-sm border-4 border-white/20">Tekan untuk Mula</div>
           </div>
       );
   }
@@ -311,31 +311,67 @@ function App() {
                   <PlayerAvatar avatar={world.img} size="sm" className="border-white" />
               </div>
               <div className="flex-1 overflow-y-auto p-4">
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {levels.map(lvl => {
                           const isUnlocked = lvl <= currentPlayer.maxUnlockedLevel;
                           const stars = currentPlayer.stars[lvl] || 0;
+                          
+                          // Get High Score (Default to Quiz mode logic mostly)
                           const highScore = currentPlayer.scores?.[lvl] || 0;
                           
+                          // Get Best Time (From Match Leaderboard)
+                          let bestTimeMs = 0;
+                          if (isUnlocked) {
+                              const matchLb = getLeaderboard(lvl, 'MATCH');
+                              const userMatchEntry = matchLb.find((e: any) => e.playerName === currentPlayer.name);
+                              if (userMatchEntry) bestTimeMs = userMatchEntry.timeMs;
+                          }
+
                           return (
                               <button 
                                   key={lvl}
                                   onClick={() => { if(isUnlocked) { setCurrentLevel(lvl); setAppState('MODE_SELECT'); } }}
                                   disabled={!isUnlocked}
-                                  className={`aspect-square rounded-xl border-b-8 flex flex-col items-center justify-center relative shadow-lg active:scale-95 transition-transform ${isUnlocked ? 'bg-amber-100 border-amber-300 text-amber-900' : 'bg-gray-400 border-gray-600 text-gray-200'}`}
+                                  className={`
+                                    min-h-[160px] md:min-h-[180px] rounded-xl border-b-8 flex flex-col relative shadow-lg active:scale-95 transition-transform overflow-hidden
+                                    ${isUnlocked ? 'bg-amber-100 border-amber-300 text-amber-900' : 'bg-gray-400 border-gray-600 text-gray-200'}
+                                  `}
                               >
-                                  <span className="text-3xl font-black mb-1">{lvl}</span>
-                                  <div className="flex gap-0.5 mb-1">
-                                      {[1,2,3].map(s => (
-                                          <Star key={s} size={12} className={s <= stars ? "text-yellow-500 fill-yellow-500" : "text-gray-300 fill-gray-300"} />
-                                      ))}
+                                  <div className="flex-1 w-full flex flex-col items-center justify-center p-2">
+                                      <span className="text-5xl md:text-7xl font-black mb-1 drop-shadow-sm text-amber-950">{lvl}</span>
+                                      
+                                      {/* Stars */}
+                                      <div className="flex gap-1 mb-2">
+                                          {[1,2,3].map(s => (
+                                              <Star key={s} size={20} className={s <= stars ? "text-yellow-500 fill-yellow-500 stroke-[2px] stroke-black" : "text-gray-300 fill-gray-300 stroke-[2px] stroke-gray-400"} />
+                                          ))}
+                                      </div>
                                   </div>
-                                  {isUnlocked && highScore > 0 && (
-                                      <div className="text-[10px] font-mono bg-black/10 px-1 rounded text-amber-900 font-bold">
-                                          {highScore}
+
+                                  {/* Stats Footer */}
+                                  {isUnlocked && (
+                                      <div className="w-full bg-black/10 p-2 space-y-1">
+                                          {highScore > 0 && (
+                                              <div className="flex items-center justify-between bg-yellow-400/80 px-2 py-1 rounded-sm border-2 border-yellow-600 text-amber-950">
+                                                  <span className="text-xs font-bold uppercase opacity-75">Skor</span>
+                                                  <span className="text-lg md:text-xl font-black font-mono leading-none">{highScore.toLocaleString()}</span>
+                                              </div>
+                                          )}
+                                          {bestTimeMs > 0 && (
+                                              <div className="flex items-center justify-between bg-blue-400/80 px-2 py-1 rounded-sm border-2 border-blue-600 text-blue-950">
+                                                   <span className="text-xs font-bold uppercase opacity-75">Masa</span>
+                                                   <span className="text-lg md:text-xl font-black font-mono leading-none">{formatTime(bestTimeMs)}</span>
+                                              </div>
+                                          )}
+                                          {highScore === 0 && bestTimeMs === 0 && (
+                                              <div className="text-center text-xs font-bold opacity-50 py-2">
+                                                  TIADA REKOD
+                                              </div>
+                                          )}
                                       </div>
                                   )}
-                                  {!isUnlocked && <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center"><Lock className="text-white/80"/></div>}
+
+                                  {!isUnlocked && <div className="absolute inset-0 bg-black/40 flex items-center justify-center"><Lock className="text-white/80 w-16 h-16"/></div>}
                               </button>
                           );
                       })}

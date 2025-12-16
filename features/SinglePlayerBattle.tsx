@@ -208,8 +208,11 @@ const SinglePlayerBattle: React.FC<SinglePlayerBattleProps> = ({ level, currentP
                            <PlayerAvatar avatar={currentPlayer.avatar} size="md" className="border-4 border-black shadow-2xl bg-white" />
                       </div>
 
-                      {/* ENEMY - Hit Animation */}
-                      <div className={`flex flex-col items-center transition-transform duration-100 ${battleState.anim === 'attack' ? 'translate-x-4 brightness-200 saturate-0' : ''} ${battleState.anim === 'win' ? 'scale-0 rotate-180 opacity-0' : ''}`}>
+                      {/* ENEMY - Hit/Attack Animation */}
+                      <div className={`flex flex-col items-center transition-transform duration-200 ease-out 
+                        ${battleState.anim === 'attack' ? 'translate-x-4 brightness-200 saturate-0' : ''} 
+                        ${battleState.anim === 'damage' ? '-translate-x-32 md:-translate-x-64 scale-110 rotate-[-12deg] z-30' : ''} 
+                        ${battleState.anim === 'win' ? 'scale-0 rotate-180 opacity-0' : ''}`}>
                           <NameTag name={world.enemy} />
                           <div className="mb-1 w-24 md:w-32">
                               <ProgressBar current={battleState.enemyHp} max={enemyMaxHP} color="bg-red-500" reverse />
