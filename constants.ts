@@ -1,3 +1,4 @@
+
 import { World, Word } from './types';
 
 export const AVATARS = [
@@ -5,12 +6,18 @@ export const AVATARS = [
   "bacon", 
   "guest", 
   "girl_pink", 
+  "girl_purple",
   "cool_boy", 
+  "boy_blue",
   "ninja", 
   "knight", 
+  "pirate",
   "wizard", 
   "rich_boy", 
-  "zombie_survivor"
+  "zombie_survivor",
+  "alien",
+  "robot_2",
+  "cat_hoodie"
 ];
 
 export const TOTAL_LEVELS = 50;

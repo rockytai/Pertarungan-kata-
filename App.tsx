@@ -5,10 +5,11 @@ import VersusSetup from './features/VersusSetup';
 import VersusGame from './features/VersusGame';
 import SinglePlayerBattle from './features/SinglePlayerBattle';
 import SinglePlayerMatch from './features/SinglePlayerMatch';
+import MistakeReview from './features/MistakeReview';
 import Card from './components/Card';
 import Button from './components/Button';
 import PlayerAvatar from './components/PlayerAvatar';
-import { Sword, Users, Home, ArrowLeft, Star, ArrowRight, RefreshCcw, Lock, Puzzle, Trophy } from './components/Icons';
+import { Sword, Users, Home, ArrowLeft, Star, ArrowRight, RefreshCcw, Lock, Puzzle, Trophy, Shield } from './components/Icons';
 import { Player, AppState, VersusConfig, BattleResult, BattleMode } from './types';
 import { AVATARS, WORLDS, TOTAL_LEVELS } from './constants';
 import { saveScore, getLeaderboard, formatTime, saveVersusWin, getVersusLeaderboard } from './utils/leaderboard';
@@ -21,14 +22,23 @@ function App() {
   const [selectedWorld, setSelectedWorld] = useState(1);
   const [currentLevel, setCurrentLevel] = useState<number | null>(null);
   const [battleMode, setBattleMode] = useState<BattleMode>('QUIZ');
+  
+  // Leaderboard State
   const [lbTab, setLbTab] = useState<'SINGLE'|'VERSUS'>('SINGLE');
+  const [lbSubTab, setLbSubTab] = useState<'QUIZ'|'MATCH'>('QUIZ');
   
   const [versusConfig, setVersusConfig] = useState<VersusConfig | null>(null);
   const [battleResult, setBattleResult] = useState<BattleResult | null>(null);
 
   useEffect(() => {
       const savedPlayers = JSON.parse(localStorage.getItem('clash_players') || '[]');
-      if (savedPlayers.length > 0) setPlayers(savedPlayers);
+      // Migration: Ensure all players have 'scores' property and 'mistakes' array
+      const migratedPlayers = savedPlayers.map((p: any) => ({
+          ...p,
+          scores: p.scores || {},
+          mistakes: p.mistakes || []
+      }));
+      if (migratedPlayers.length > 0) setPlayers(migratedPlayers);
   }, []);
 
   const savePlayers = (newPlayers: Player[]) => {
@@ -42,7 +52,9 @@ function App() {
           name,
           avatar,
           maxUnlockedLevel: 1,
-          stars: {}
+          stars: {},
+          scores: {},
+          mistakes: []
       };
       const updatedPlayers = [...players, newPlayer];
       savePlayers(updatedPlayers);
@@ -50,16 +62,29 @@ function App() {
       setAppState('MENU');
   };
 
-  const updatePlayerProgress = (pid: number, level: number, stars: number) => {
+  const updatePlayerProgress = (pid: number, level: number, stars: number, score: number) => {
       const updated = players.map(p => {
           if (p.id === pid) {
               const newStars = { ...p.stars };
               if (!newStars[level] || stars > newStars[level]) {
                   newStars[level] = stars;
               }
+              
+              const newScores = { ...(p.scores || {}) };
+              // We just keep the best generic score for the "Total Score" calculation
+              if (!newScores[level] || score > newScores[level]) {
+                  newScores[level] = score;
+              }
+
               const nextLevel = level + 1;
               const maxLvl = Math.max(p.maxUnlockedLevel, stars > 0 ? nextLevel : p.maxUnlockedLevel);
-              return { ...p, stars: newStars, maxUnlockedLevel: Math.min(maxLvl, TOTAL_LEVELS) };
+              
+              return { 
+                  ...p, 
+                  stars: newStars, 
+                  scores: newScores,
+                  maxUnlockedLevel: Math.min(maxLvl, TOTAL_LEVELS) 
+              };
           }
           return p;
       });
@@ -69,13 +94,49 @@ function App() {
       }
   };
 
+  const addMistake = (wordId: number) => {
+      if (!currentPlayer) return;
+      
+      const currentMistakes = currentPlayer.mistakes || [];
+      // Avoid duplicates
+      if (!currentMistakes.includes(wordId)) {
+          const updatedPlayer = {
+              ...currentPlayer,
+              mistakes: [...currentMistakes, wordId]
+          };
+          
+          const updatedPlayers = players.map(p => p.id === currentPlayer.id ? updatedPlayer : p);
+          savePlayers(updatedPlayers);
+          setCurrentPlayer(updatedPlayer);
+      }
+  };
+
+  const removeMistake = (wordId: number) => {
+       if (!currentPlayer) return;
+
+       const updatedPlayer = {
+           ...currentPlayer,
+           mistakes: currentPlayer.mistakes.filter(id => id !== wordId)
+       };
+       const updatedPlayers = players.map(p => p.id === currentPlayer.id ? updatedPlayer : p);
+       savePlayers(updatedPlayers);
+       setCurrentPlayer(updatedPlayer);
+  };
+
   const handleResetGame = () => {
       localStorage.removeItem('clash_players');
-      localStorage.removeItem('clash_leaderboard');
+      localStorage.removeItem('clash_lb_quiz');
+      localStorage.removeItem('clash_lb_match');
       localStorage.removeItem('clash_leaderboard_versus');
       setPlayers([]);
       setCurrentPlayer(null);
       if (appState !== 'USER_SELECT') setAppState('USER_SELECT');
+  };
+
+  // Helper to calculate total score
+  const getTotalScore = (p: Player) => {
+      if (!p.scores) return 0;
+      return Object.values(p.scores).reduce((acc, curr) => acc + curr, 0);
   };
 
   if (appState === 'SPLASH') {
@@ -100,24 +161,58 @@ function App() {
   }
 
   if (appState === 'MENU' && currentPlayer) {
+      const totalScore = getTotalScore(currentPlayer);
+      const mistakeCount = currentPlayer.mistakes?.length || 0;
+
       return (
           <div className="h-[100dvh] bg-sky-400 flex items-center justify-center p-4">
               <Card className="max-w-md w-full p-8 text-center bg-orange-50">
-                  <div className="mb-4 flex justify-center">
-                      <PlayerAvatar avatar={currentPlayer.avatar} size="lg" className="border-4 border-amber-500" />
+                  <div className="mb-2 flex justify-center">
+                      <PlayerAvatar avatar={currentPlayer.avatar} size="lg" className="border-4 border-amber-500 shadow-xl" />
                   </div>
                   <h1 className="text-3xl font-black text-amber-900 mb-2">Hai, {currentPlayer.name}!</h1>
-                  <p className="text-amber-700 mb-8 font-bold">Sedia untuk berjuang?</p>
                   
-                  <div className="space-y-4">
-                      <Button onClick={() => setAppState('WORLD_SELECT')} className="w-full text-xl py-4 shadow-xl">
+                  {/* Total Score Badge - Enhanced */}
+                  <div className="mb-6 relative group cursor-pointer hover:scale-105 transition-transform">
+                     <div className="absolute -inset-1 bg-yellow-400 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-200 animate-pulse"></div>
+                     <div className="relative bg-black rounded-lg p-2 border-2 border-yellow-500 flex flex-col items-center">
+                        <div className="text-yellow-400 font-bold text-xs uppercase tracking-[0.2em] mb-0">Total Skor Terkumpul</div>
+                        <div className="flex items-center gap-2">
+                             <Trophy size={28} className="text-yellow-400" />
+                             <span className="font-black text-4xl text-white font-mono roblox-text-shadow">
+                                 {totalScore.toLocaleString()}
+                             </span>
+                        </div>
+                     </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                      <Button onClick={() => setAppState('WORLD_SELECT')} className="w-full text-xl py-3 shadow-xl">
                           <Sword size={24} /> Pemain Tunggal
                       </Button>
-                      <Button onClick={() => setAppState('VERSUS_SETUP')} variant="danger" className="w-full text-xl py-4 shadow-xl">
+                      
+                      {/* Mistake Bank Button */}
+                      <div className="relative">
+                          <Button 
+                            onClick={() => setAppState('MISTAKE_REVIEW')} 
+                            variant="success" 
+                            className="w-full text-xl py-3 shadow-xl"
+                            disabled={mistakeCount === 0}
+                          >
+                             <Shield size={24} /> Bank Soalan Salah
+                          </Button>
+                          {mistakeCount > 0 && (
+                             <div className="absolute -top-2 -right-2 bg-red-600 text-white font-black rounded-full w-8 h-8 flex items-center justify-center border-2 border-white animate-bounce">
+                                 {mistakeCount}
+                             </div>
+                          )}
+                      </div>
+
+                      <Button onClick={() => setAppState('VERSUS_SETUP')} variant="danger" className="w-full text-xl py-3 shadow-xl">
                           <Users size={24} /> Dua Pemain (Versus)
                       </Button>
                       
-                      <Button onClick={() => { setCurrentLevel(1); setLbTab('SINGLE'); setAppState('LEADERBOARD_VIEW'); }} variant="info" className="w-full text-xl py-4 shadow-xl">
+                      <Button onClick={() => { setCurrentLevel(1); setLbTab('SINGLE'); setLbSubTab('QUIZ'); setAppState('LEADERBOARD_VIEW'); }} variant="info" className="w-full text-xl py-3 shadow-xl">
                           <Trophy size={24} /> Papan Pendahulu
                       </Button>
 
@@ -127,6 +222,16 @@ function App() {
                   </div>
               </Card>
           </div>
+      );
+  }
+
+  if (appState === 'MISTAKE_REVIEW' && currentPlayer) {
+      return (
+          <MistakeReview 
+            player={currentPlayer}
+            onRemoveMistake={removeMistake}
+            onExit={() => setAppState('MENU')}
+          />
       );
   }
 
@@ -210,6 +315,8 @@ function App() {
                       {levels.map(lvl => {
                           const isUnlocked = lvl <= currentPlayer.maxUnlockedLevel;
                           const stars = currentPlayer.stars[lvl] || 0;
+                          const highScore = currentPlayer.scores?.[lvl] || 0;
+                          
                           return (
                               <button 
                                   key={lvl}
@@ -218,11 +325,16 @@ function App() {
                                   className={`aspect-square rounded-xl border-b-8 flex flex-col items-center justify-center relative shadow-lg active:scale-95 transition-transform ${isUnlocked ? 'bg-amber-100 border-amber-300 text-amber-900' : 'bg-gray-400 border-gray-600 text-gray-200'}`}
                               >
                                   <span className="text-3xl font-black mb-1">{lvl}</span>
-                                  <div className="flex gap-0.5">
+                                  <div className="flex gap-0.5 mb-1">
                                       {[1,2,3].map(s => (
                                           <Star key={s} size={12} className={s <= stars ? "text-yellow-500 fill-yellow-500" : "text-gray-300 fill-gray-300"} />
                                       ))}
                                   </div>
+                                  {isUnlocked && highScore > 0 && (
+                                      <div className="text-[10px] font-mono bg-black/10 px-1 rounded text-amber-900 font-bold">
+                                          {highScore}
+                                      </div>
+                                  )}
                                   {!isUnlocked && <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center"><Lock className="text-white/80"/></div>}
                               </button>
                           );
@@ -233,12 +345,20 @@ function App() {
       );
   }
 
-  if (appState === 'MODE_SELECT' && currentLevel) {
+  if (appState === 'MODE_SELECT' && currentLevel && currentPlayer) {
+      const bestScore = currentPlayer.scores?.[currentLevel] || 0;
       return (
           <div className="h-[100dvh] bg-sky-500/90 flex items-center justify-center p-4 fixed inset-0 z-50">
               <Card className="max-w-sm w-full p-6 text-center bg-white animate-fadeIn">
-                  <h2 className="text-2xl font-black uppercase mb-2">Pilih Cara Main</h2>
-                  <p className="text-gray-600 font-bold mb-6">Level {currentLevel}</p>
+                  <h2 className="text-2xl font-black uppercase mb-1">Pilih Cara Main</h2>
+                  <p className="text-gray-600 font-bold mb-2">Level {currentLevel}</p>
+                  
+                  {bestScore > 0 && (
+                       <div className="mb-6 bg-yellow-100 border-2 border-yellow-300 p-2 rounded-sm inline-block">
+                           <div className="text-xs font-bold text-yellow-700 uppercase tracking-widest">Rekod Tertinggi</div>
+                           <div className="text-2xl font-black text-yellow-600 font-mono">{bestScore.toLocaleString()}</div>
+                       </div>
+                  )}
                   
                   <div className="space-y-4">
                       <Button onClick={() => { setBattleMode('QUIZ'); setAppState('BATTLE'); }} className="w-full py-4 text-xl">
@@ -249,7 +369,7 @@ function App() {
                       </Button>
                       
                       <button 
-                        onClick={() => { setLbTab('SINGLE'); setAppState('LEADERBOARD_VIEW'); }}
+                        onClick={() => { setLbTab('SINGLE'); setLbSubTab('QUIZ'); setAppState('LEADERBOARD_VIEW'); }}
                         className="w-full py-2 flex items-center justify-center gap-2 text-yellow-600 font-bold hover:text-yellow-700"
                       >
                           <Trophy size={18}/> Lihat Carta (Leaderboard)
@@ -265,12 +385,13 @@ function App() {
   }
 
   if (appState === 'LEADERBOARD_VIEW' && currentLevel && currentPlayer) {
-      const lbSingle = getLeaderboard(currentLevel);
+      // Fetch separate leaderboards based on sub-tab
+      const lbSingle = getLeaderboard(currentLevel, lbSubTab);
       const lbVersus = getVersusLeaderboard();
       
       return (
           <div className="h-[100dvh] bg-black/90 flex items-center justify-center p-4 fixed inset-0 z-50">
-               <Card className="max-w-md w-full p-6 text-center bg-white flex flex-col max-h-[90vh]">
+               <Card className="max-w-md w-full p-4 text-center bg-white flex flex-col max-h-[95vh]">
                     {/* Header */}
                     <div className="flex items-center justify-between border-b-4 border-black pb-2 mb-2">
                         <button 
@@ -296,49 +417,75 @@ function App() {
                         </button>
                     </div>
 
-                    {/* Tabs */}
-                    <div className="flex gap-2 mb-4">
+                    {/* Main Tabs */}
+                    <div className="flex gap-2 mb-2">
                         <button 
                             onClick={() => setLbTab('SINGLE')} 
-                            className={`flex-1 py-2 font-bold border-2 rounded-sm text-sm ${lbTab === 'SINGLE' ? 'bg-blue-500 text-white border-black' : 'bg-gray-100 border-gray-300'}`}
+                            className={`flex-1 py-2 font-bold border-b-4 text-sm uppercase transition-all ${lbTab === 'SINGLE' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
                         >
                             Pemain Tunggal
                         </button>
                         <button 
                             onClick={() => setLbTab('VERSUS')} 
-                            className={`flex-1 py-2 font-bold border-2 rounded-sm text-sm ${lbTab === 'VERSUS' ? 'bg-red-500 text-white border-black' : 'bg-gray-100 border-gray-300'}`}
+                            className={`flex-1 py-2 font-bold border-b-4 text-sm uppercase transition-all ${lbTab === 'VERSUS' ? 'border-red-500 text-red-600 bg-red-50' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
                         >
                             Versus
                         </button>
                     </div>
 
+                    {/* Sub Tabs for Single Player */}
+                    {lbTab === 'SINGLE' && (
+                        <div className="flex gap-2 mb-4 p-1 bg-gray-100 rounded-lg">
+                             <button 
+                                onClick={() => setLbSubTab('QUIZ')}
+                                className={`flex-1 py-1 rounded-md text-sm font-bold transition-all ${lbSubTab === 'QUIZ' ? 'bg-white shadow text-black' : 'text-gray-400'}`}
+                             >
+                                 <div className="flex items-center justify-center gap-2"><Sword size={14}/> Kuiz</div>
+                             </button>
+                             <button 
+                                onClick={() => setLbSubTab('MATCH')}
+                                className={`flex-1 py-1 rounded-md text-sm font-bold transition-all ${lbSubTab === 'MATCH' ? 'bg-white shadow text-black' : 'text-gray-400'}`}
+                             >
+                                 <div className="flex items-center justify-center gap-2"><Puzzle size={14}/> Padanan</div>
+                             </button>
+                        </div>
+                    )}
+
                     {/* Content */}
-                    <div className="flex-1 overflow-y-auto bg-gray-100 border-2 border-black rounded-sm p-2 mb-4">
+                    <div className="flex-1 overflow-y-auto bg-gray-50 border-2 border-black rounded-sm p-2 mb-4">
                         {lbTab === 'SINGLE' ? (
                             lbSingle.length > 0 ? (
                                 <table className="w-full text-left text-sm md:text-base">
                                     <thead>
-                                        <tr className="border-b-2 border-gray-300">
+                                        <tr className="border-b-2 border-gray-300 text-gray-500">
                                             <th className="p-2">#</th>
                                             <th className="p-2">Nama</th>
-                                            <th className="p-2 text-right">Masa</th>
+                                            {/* Dynamic Column Header */}
+                                            <th className="p-2 text-right">
+                                                {lbSubTab === 'QUIZ' ? 'Skor' : 'Masa'}
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {lbSingle.map((entry, i) => (
-                                            <tr key={i} className={`border-b border-gray-200 ${entry.playerName === currentPlayer.name ? 'bg-yellow-200 font-bold' : ''}`}>
+                                            <tr key={i} className={`border-b border-gray-200 ${entry.playerName === currentPlayer.name ? 'bg-yellow-100 font-bold' : ''}`}>
                                                 <td className="p-2 font-bold">{i+1}</td>
                                                 <td className="p-2">
                                                     <span className="truncate w-full block">{entry.playerName}</span>
                                                 </td>
-                                                <td className="p-2 text-right font-mono font-bold">{formatTime(entry.timeMs)}</td>
+                                                <td className="p-2 text-right font-mono font-bold">
+                                                    {lbSubTab === 'QUIZ' 
+                                                        ? (entry.score ? entry.score.toLocaleString() : '-') 
+                                                        : (entry.timeMs ? formatTime(entry.timeMs) : '-')}
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
                             ) : (
-                                <div className="py-8 text-gray-400 font-bold italic">
-                                    Belum ada rekod.
+                                <div className="py-8 text-gray-400 font-bold italic flex flex-col items-center">
+                                    <div>Tiada rekod {lbSubTab === 'QUIZ' ? 'Kuiz' : 'Padanan'}.</div>
+                                    <div className="text-xs font-normal">Jadilah yang pertama!</div>
                                 </div>
                             )
                         ) : (
@@ -353,7 +500,7 @@ function App() {
                                     </thead>
                                     <tbody>
                                         {lbVersus.map((entry, i) => (
-                                            <tr key={i} className={`border-b border-gray-200 ${entry.playerName === currentPlayer.name ? 'bg-yellow-200 font-bold' : ''}`}>
+                                            <tr key={i} className={`border-b border-gray-200 ${entry.playerName === currentPlayer.name ? 'bg-yellow-100 font-bold' : ''}`}>
                                                 <td className="p-2 font-bold">{i+1}</td>
                                                 <td className="p-2">
                                                     <span className="truncate w-full block">{entry.playerName}</span>
@@ -380,14 +527,19 @@ function App() {
   }
 
   if (appState === 'BATTLE' && currentLevel && currentPlayer) {
+      const highScore = currentPlayer.scores?.[currentLevel] || 0;
+      
       if (battleMode === 'QUIZ') {
           return <SinglePlayerBattle 
               level={currentLevel} 
               currentPlayer={currentPlayer}
-              onWin={(mistakes) => {
+              highScore={highScore}
+              onWin={(mistakes, score) => {
                   const stars = mistakes === 0 ? 3 : mistakes <= 2 ? 2 : 1;
-                  updatePlayerProgress(currentPlayer.id, currentLevel, stars);
-                  setBattleResult({ status: 'WIN', stars });
+                  updatePlayerProgress(currentPlayer.id, currentLevel, stars, score);
+                  // SAVE SCORE FOR QUIZ MODE
+                  saveScore(currentLevel, currentPlayer, 0, score, 'QUIZ');
+                  setBattleResult({ status: 'WIN', stars, score });
                   setAppState('RESULT');
               }}
               onLose={() => {
@@ -395,16 +547,19 @@ function App() {
                   setAppState('RESULT');
               }}
               onExit={() => setAppState('LEVEL_SELECT')}
+              onAddMistake={addMistake}
           />;
       } else {
           return <SinglePlayerMatch 
               level={currentLevel}
               currentPlayer={currentPlayer}
-              onWin={(mistakes, timeMs) => {
+              highScore={highScore}
+              onWin={(mistakes, timeMs, score) => {
                   const stars = mistakes === 0 ? 3 : mistakes <= 3 ? 2 : 1;
-                  updatePlayerProgress(currentPlayer.id, currentLevel, stars);
-                  saveScore(currentLevel, currentPlayer, timeMs);
-                  setBattleResult({ status: 'WIN', stars, timeMs });
+                  updatePlayerProgress(currentPlayer.id, currentLevel, stars, score);
+                  // SAVE SCORE FOR MATCH MODE
+                  saveScore(currentLevel, currentPlayer, timeMs, score, 'MATCH');
+                  setBattleResult({ status: 'WIN', stars, timeMs, score });
                   setAppState('RESULT');
               }}
               onLose={() => {
@@ -412,13 +567,15 @@ function App() {
                   setAppState('RESULT');
               }}
               onExit={() => setAppState('LEVEL_SELECT')}
+              onAddMistake={addMistake}
           />
       }
   }
 
   if (appState === 'RESULT' && battleResult) {
       const isWin = battleResult.status === 'WIN';
-      const leaderboard = (isWin && battleResult.timeMs && currentLevel) ? getLeaderboard(currentLevel) : [];
+      // Use the last played mode to show relevant leaderboard
+      const leaderboard = (isWin && currentLevel) ? getLeaderboard(currentLevel, battleMode) : [];
 
       return (
           <div className="h-[100dvh] bg-black/90 flex items-center justify-center p-4">
@@ -433,8 +590,19 @@ function App() {
                                 <Star key={s} size={32} className={s <= battleResult.stars ? "text-yellow-500 fill-yellow-500" : "text-gray-400 fill-gray-400"} />
                             ))}
                         </div>
-                        {battleResult.timeMs && (
-                            <div className="text-xl font-bold bg-black text-yellow-300 px-4 py-1 rounded-sm inline-block mx-auto mb-4 border-2 border-white">
+                        
+                        {/* Score Display */}
+                        {battleResult.score !== undefined && (
+                             <div className="mb-4">
+                                <div className="text-sm font-bold text-gray-500">TOTAL SCORE</div>
+                                <div className="text-4xl font-black font-mono text-yellow-600 tracking-widest">
+                                    {battleResult.score.toLocaleString()}
+                                </div>
+                             </div>
+                        )}
+
+                        {battleResult.timeMs && battleResult.timeMs > 0 && (
+                            <div className="text-sm font-bold bg-black text-white px-2 py-1 rounded-sm inline-block mx-auto mb-4 border-2 border-gray-600">
                                 MASA: {formatTime(battleResult.timeMs)}
                             </div>
                         )}
@@ -443,23 +611,32 @@ function App() {
 
                   {isWin && leaderboard.length > 0 && (
                       <div className="flex-1 overflow-y-auto bg-white border-2 border-black rounded-sm p-2 mb-4">
-                          <h3 className="text-lg font-black uppercase border-b-2 border-black mb-2 flex items-center justify-center gap-2"><Trophy size={16}/> Papan Pendahulu</h3>
+                          <h3 className="text-lg font-black uppercase border-b-2 border-black mb-2 flex items-center justify-center gap-2">
+                              <Trophy size={16}/> 
+                              Carta {battleMode === 'QUIZ' ? 'Kuiz' : 'Padanan'}
+                          </h3>
                           <table className="w-full text-left text-sm">
                               <thead>
                                   <tr className="bg-gray-100">
                                       <th className="p-1">#</th>
                                       <th className="p-1">Nama</th>
-                                      <th className="p-1 text-right">Masa</th>
+                                      <th className="p-1 text-right">
+                                          {battleMode === 'QUIZ' ? 'Skor' : 'Masa'}
+                                      </th>
                                   </tr>
                               </thead>
                               <tbody>
                                   {leaderboard.map((entry, i) => (
-                                      <tr key={i} className={`border-b ${entry.playerName === currentPlayer?.name && entry.timeMs === battleResult.timeMs ? 'bg-yellow-100 font-bold' : ''}`}>
+                                      <tr key={i} className={`border-b ${entry.playerName === currentPlayer?.name && entry.score === battleResult.score ? 'bg-yellow-100 font-bold' : ''}`}>
                                           <td className="p-1 font-bold">{i+1}</td>
                                           <td className="p-1">
                                               <span className="truncate w-full block">{entry.playerName}</span>
                                           </td>
-                                          <td className="p-1 text-right font-mono">{formatTime(entry.timeMs)}</td>
+                                          <td className="p-1 text-right font-mono">
+                                              {battleMode === 'QUIZ' 
+                                                  ? (entry.score ? entry.score.toLocaleString() : '-') 
+                                                  : (entry.timeMs ? formatTime(entry.timeMs) : '-')}
+                                          </td>
                                       </tr>
                                   ))}
                               </tbody>

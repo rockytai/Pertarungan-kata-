@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Button from '../components/Button';
 import PlayerAvatar from '../components/PlayerAvatar';
 import ProgressBar from '../components/ProgressBar';
-import { ArrowLeft, Trophy, Heart, Volume2 } from '../components/Icons';
+import { ArrowLeft, Trophy, Heart, Volume2, Star } from '../components/Icons';
 import { Player, Word } from '../types';
 import { WORLDS, getWordsForLevel, generateOptions } from '../constants';
 import { AudioEngine } from '../utils/audio';
@@ -11,9 +11,11 @@ import { AudioEngine } from '../utils/audio';
 interface SinglePlayerBattleProps {
   level: number;
   currentPlayer: Player;
-  onWin: (mistakes: number) => void;
+  highScore: number;
+  onWin: (mistakes: number, score: number) => void;
   onLose: () => void;
   onExit: () => void;
+  onAddMistake: (wordId: number) => void;
 }
 
 const OPTION_THEMES = [
@@ -31,7 +33,7 @@ const NameTag = ({ name }: { name: string }) => (
     </div>
 );
 
-const SinglePlayerBattle: React.FC<SinglePlayerBattleProps> = ({ level, currentPlayer, onWin, onLose, onExit }) => {
+const SinglePlayerBattle: React.FC<SinglePlayerBattleProps> = ({ level, currentPlayer, highScore, onWin, onLose, onExit, onAddMistake }) => {
     const world = WORLDS.find(w => w.id === Math.ceil(level / 10));
     if (!world) return <div>World not found</div>;
 
@@ -46,7 +48,10 @@ const SinglePlayerBattle: React.FC<SinglePlayerBattleProps> = ({ level, currentP
         mistakes: 0,
         message: "",
         anim: null as 'damage' | 'attack' | 'win' | null,
-        shake: false
+        shake: false,
+        score: 0,
+        combo: 0,
+        addedScore: 0
     });
     
     const [options, setOptions] = useState<Word[]>([]);
@@ -67,12 +72,25 @@ const SinglePlayerBattle: React.FC<SinglePlayerBattleProps> = ({ level, currentP
             const dmg = Math.ceil(enemyMaxHP / 10 * 1.2);
             const newEnemyHp = Math.max(0, battleState.enemyHp - dmg);
 
+            // Scoring Logic
+            const basePoints = 1000;
+            const comboBonus = battleState.combo * 200;
+            const points = basePoints + comboBonus;
+
             setBattleState(prev => ({
                 ...prev,
                 enemyHp: newEnemyHp,
                 message: "CRITICAL HIT! (暴击!)",
-                anim: 'attack' 
+                anim: 'attack',
+                score: prev.score + points,
+                combo: prev.combo + 1,
+                addedScore: points
             }));
+
+            // Clear added score anim after delay
+            setTimeout(() => {
+                setBattleState(prev => ({ ...prev, addedScore: 0 }));
+            }, 800);
 
             setTimeout(() => {
                  setBattleState(prev => ({ ...prev, anim: null }));
@@ -82,7 +100,8 @@ const SinglePlayerBattle: React.FC<SinglePlayerBattleProps> = ({ level, currentP
                 setBattleState(prev => ({ ...prev, anim: 'win', message: "BOSS TEWAS! (击败!)" }));
                 setTimeout(() => {
                     AudioEngine.playWin();
-                    onWin(battleState.mistakes);
+                    // Pass score to onWin
+                    onWin(battleState.mistakes, battleState.score + points); // +points because state update is async, or we use new state. Wait, setBattleState updates are batched.
                 }, 1000);
             } else {
                 setTimeout(() => {
@@ -91,6 +110,9 @@ const SinglePlayerBattle: React.FC<SinglePlayerBattleProps> = ({ level, currentP
             }
         } else {
             AudioEngine.playDamage();
+            // Record mistake
+            onAddMistake(currentWord.id);
+
             const dmg = 34; 
             const newHp = Math.max(0, battleState.hp - dmg);
             
@@ -100,7 +122,8 @@ const SinglePlayerBattle: React.FC<SinglePlayerBattleProps> = ({ level, currentP
                 mistakes: prev.mistakes + 1,
                 message: `SALAH! (错了!)`,
                 anim: 'damage',
-                shake: true
+                shake: true,
+                combo: 0 // Reset Combo
             }));
 
             setTimeout(() => {
@@ -126,6 +149,24 @@ const SinglePlayerBattle: React.FC<SinglePlayerBattleProps> = ({ level, currentP
                       <Button variant="secondary" onClick={onExit} className="px-2 py-1 text-xs mb-0 h-8"><ArrowLeft size={16}/></Button>
                       <div className="font-bold text-yellow-400 flex items-center gap-2 text-lg font-mono"><Trophy size={18}/> LVL {level}</div>
                   </div>
+                  
+                  {/* Score Display */}
+                  <div className="flex-1 text-center flex flex-col items-center">
+                     <div className="inline-block bg-black/50 px-4 rounded border-2 border-white/20 text-yellow-300 font-black font-mono text-xl tracking-widest relative">
+                        {battleState.score.toLocaleString()}
+                        {battleState.addedScore > 0 && (
+                            <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-green-400 text-sm font-bold animate-[moveUp_0.8s_ease-out_forwards] pointer-events-none">
+                                +{battleState.addedScore}
+                            </span>
+                        )}
+                     </div>
+                     {highScore > 0 && (
+                        <div className="text-[10px] text-gray-300 font-bold -mt-1 tracking-wider uppercase">
+                            Rekod: {highScore.toLocaleString()}
+                        </div>
+                     )}
+                  </div>
+
                   <div className="flex gap-1 pr-2">
                       {[1,2,3].map(h => (
                           <div key={h} className="transform hover:scale-110 transition-transform">
@@ -145,6 +186,15 @@ const SinglePlayerBattle: React.FC<SinglePlayerBattleProps> = ({ level, currentP
                   {battleState.message && (
                       <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-2 border-4 border-black font-black animate-bounce z-40 whitespace-nowrap text-3xl roblox-shadow font-mono rotate-[-5deg]">
                           {battleState.message}
+                      </div>
+                  )}
+
+                  {/* Combo Indicator */}
+                  {battleState.combo > 1 && (
+                      <div className="absolute top-20 left-10 z-50 animate-bounce">
+                          <div className="text-4xl md:text-6xl font-black text-yellow-400 roblox-text-shadow rotate-12 border-4 border-black bg-red-500 px-4 py-2 rounded-sm transform skew-x-12">
+                              x{battleState.combo} COMBO!
+                          </div>
                       </div>
                   )}
 

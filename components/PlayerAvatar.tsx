@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface PlayerAvatarProps {
@@ -46,6 +47,23 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ avatar, size = "md", classN
       </g>
     );
 
+    const PirateFace = () => (
+      <g>
+          <circle cx="35" cy="40" r="4" fill="black" />
+          <circle cx="65" cy="40" r="6" fill="black" /> {/* Eye patch */}
+          <path d="M58 35 L72 35" stroke="black" strokeWidth="2" /> {/* Strap */}
+          <path d="M35 60 Q50 70 65 60" stroke="black" strokeWidth="4" fill="none" strokeLinecap="round" />
+      </g>
+    );
+
+    const AlienFace = () => (
+      <g>
+          <ellipse cx="30" cy="45" rx="8" ry="12" fill="black" />
+          <ellipse cx="70" cy="45" rx="8" ry="12" fill="black" />
+          <path d="M45 70 Q50 75 55 70" stroke="black" strokeWidth="2" fill="none" />
+      </g>
+    );
+
     const renderContent = (type: string) => {
         switch(type) {
             // --- PLAYERS ---
@@ -86,6 +104,15 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ avatar, size = "md", classN
                         <Face />
                     </svg>
                 );
+            case 'girl_purple':
+                return (
+                    <svg viewBox="0 0 100 100" className="w-full h-full bg-[#fde047]">
+                        {/* Purple Hair */}
+                        <path d="M0 0 L100 0 L100 80 L80 60 L20 60 L0 80 Z" fill="#9333ea" />
+                        <rect x="0" y="0" width="100" height="30" fill="#9333ea" />
+                        <Face />
+                    </svg>
+                );
             case 'cool_boy':
                 return (
                     <svg viewBox="0 0 100 100" className="w-full h-full bg-[#fde047]">
@@ -95,6 +122,15 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ avatar, size = "md", classN
                         <rect x="55" y="40" width="25" height="15" fill="black" />
                         <line x1="45" y1="45" x2="55" y2="45" stroke="black" strokeWidth="2" />
                         <path d="M35 70 Q50 80 65 70" stroke="black" strokeWidth="4" fill="none" strokeLinecap="round" />
+                    </svg>
+                );
+            case 'boy_blue':
+                 return (
+                    <svg viewBox="0 0 100 100" className="w-full h-full bg-[#fde047]">
+                        {/* Blue Cap */}
+                        <path d="M0 0 L100 0 L100 35 L0 35 Z" fill="#2563eb" />
+                        <rect x="10" y="30" width="80" height="5" fill="#1d4ed8" />
+                        <Face />
                     </svg>
                 );
              case 'ninja':
@@ -111,6 +147,16 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ avatar, size = "md", classN
                         {/* Helm */}
                         <rect x="20" y="30" width="60" height="10" fill="black" rx="2" />
                         <rect x="45" y="30" width="10" height="40" fill="black" rx="2" />
+                    </svg>
+                );
+            case 'pirate':
+                return (
+                    <svg viewBox="0 0 100 100" className="w-full h-full bg-[#fde047]">
+                        {/* Bandana */}
+                        <path d="M0 0 L100 0 L100 35 L0 35 Z" fill="#dc2626" />
+                        <circle cx="20" cy="20" r="5" fill="white" opacity="0.5"/>
+                        <circle cx="80" cy="25" r="5" fill="white" opacity="0.5"/>
+                        <PirateFace />
                     </svg>
                 );
              case 'wizard':
@@ -140,6 +186,34 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ avatar, size = "md", classN
                         <path d="M35 55 Q50 70 65 55" stroke="#166534" strokeWidth="4" fill="none" strokeLinecap="round" />
                         <circle cx="30" cy="40" r="6" fill="red" />
                         <circle cx="70" cy="40" r="4" fill="black" />
+                    </svg>
+                );
+            case 'alien':
+                return (
+                    <svg viewBox="0 0 100 100" className="w-full h-full bg-[#4ade80]">
+                        <AlienFace />
+                    </svg>
+                );
+            case 'robot_2':
+                 return (
+                    <svg viewBox="0 0 100 100" className="w-full h-full bg-slate-400">
+                         <rect x="10" y="25" width="80" height="15" fill="#1e293b" />
+                         <rect x="20" y="28" width="60" height="8" fill="#ef4444" className="animate-pulse" />
+                         <rect x="30" y="60" width="40" height="2" fill="black" />
+                         <line x1="30" y1="60" x2="30" y2="70" stroke="black" />
+                         <line x1="70" y1="60" x2="70" y2="70" stroke="black" />
+                    </svg>
+                );
+            case 'cat_hoodie':
+                 return (
+                    <svg viewBox="0 0 100 100" className="w-full h-full bg-[#fde047]">
+                         {/* Hood */}
+                         <path d="M0 0 L20 40 L80 40 L100 0 L100 100 L0 100 Z" fill="#fb923c" />
+                         <rect x="0" y="0" width="100" height="30" fill="#fb923c" />
+                         {/* Ears */}
+                         <path d="M10 0 L30 0 L10 20 Z" fill="#c2410c" />
+                         <path d="M90 0 L70 0 L90 20 Z" fill="#c2410c" />
+                         <Face />
                     </svg>
                 );
 

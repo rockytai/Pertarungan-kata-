@@ -12,6 +12,8 @@ export interface Player {
   avatar: string;
   maxUnlockedLevel: number;
   stars: Record<number, number>;
+  scores: Record<number, number>; // Best score for each level
+  mistakes: number[]; // Array of Word IDs that were answered incorrectly
   // Runtime properties for versus mode
   score?: number;
   hp?: number;
@@ -47,6 +49,7 @@ export type AppState =
   | 'MODE_SELECT'
   | 'LEADERBOARD_VIEW'
   | 'BATTLE' 
+  | 'MISTAKE_REVIEW'
   | 'VERSUS_SETUP' 
   | 'VERSUS_GAME' 
   | 'RESULT';
@@ -57,6 +60,7 @@ export interface LeaderboardEntry {
   playerName: string;
   avatar: string;
   timeMs: number;
+  score: number;
   date: number;
 }
 
@@ -71,4 +75,5 @@ export interface BattleResult {
   status: 'WIN' | 'LOSE';
   stars: number;
   timeMs?: number;
+  score?: number;
 }

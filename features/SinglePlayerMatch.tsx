@@ -11,9 +11,11 @@ import { AudioEngine } from '../utils/audio';
 interface SinglePlayerMatchProps {
   level: number;
   currentPlayer: Player;
-  onWin: (mistakes: number, timeMs: number) => void;
+  highScore: number;
+  onWin: (mistakes: number, timeMs: number, score: number) => void;
   onLose: () => void;
   onExit: () => void;
+  onAddMistake: (wordId: number) => void;
 }
 
 interface Card {
@@ -32,7 +34,7 @@ const NameTag = ({ name }: { name: string }) => (
     </div>
 );
 
-const SinglePlayerMatch: React.FC<SinglePlayerMatchProps> = ({ level, currentPlayer, onWin, onLose, onExit }) => {
+const SinglePlayerMatch: React.FC<SinglePlayerMatchProps> = ({ level, currentPlayer, highScore, onWin, onLose, onExit, onAddMistake }) => {
     const world = WORLDS.find(w => w.id === Math.ceil(level / 10));
     if (!world) return <div>World not found</div>;
 
@@ -53,6 +55,11 @@ const SinglePlayerMatch: React.FC<SinglePlayerMatchProps> = ({ level, currentPla
     const [mistakes, setMistakes] = useState(0);
     const [matchesFound, setMatchesFound] = useState(0);
     
+    // Scoring
+    const [score, setScore] = useState(0);
+    const [combo, setCombo] = useState(0);
+    const [addedScore, setAddedScore] = useState(0);
+
     // Animations
     const [message, setMessage] = useState("");
     const [anim, setAnim] = useState<'damage' | 'attack' | 'win' | null>(null);
@@ -117,6 +124,15 @@ const SinglePlayerMatch: React.FC<SinglePlayerMatchProps> = ({ level, currentPla
         AudioEngine.playAttack();
         setSelectedCardId(null);
 
+        // Score logic
+        const basePoints = 1200;
+        const comboBonus = combo * 300;
+        const points = basePoints + comboBonus;
+        setScore(prev => prev + points);
+        setCombo(prev => prev + 1);
+        setAddedScore(points);
+        setTimeout(() => setAddedScore(0), 800);
+
         // Mark matched
         setCards(prev => prev.map(c => 
             (c.id === c1.id || c.id === c2.id) ? { ...c, isMatched: true } : c
@@ -133,7 +149,8 @@ const SinglePlayerMatch: React.FC<SinglePlayerMatchProps> = ({ level, currentPla
                  setMessage("MENANG! (胜利!)");
                  setTimeout(() => {
                      AudioEngine.playWin();
-                     onWin(mistakes, currentTime);
+                     // Use callback value for score to ensure latest
+                     onWin(mistakes, currentTime, score + points);
                  }, 1000);
             } else {
                 setAnim('attack');
@@ -147,7 +164,13 @@ const SinglePlayerMatch: React.FC<SinglePlayerMatchProps> = ({ level, currentPla
         AudioEngine.playDamage();
         setErrorCardIds([c1.id, c2.id]);
         
+        // Record both cards involved as they were confusing for the user
+        onAddMistake(c1.wordId);
+        onAddMistake(c2.wordId);
+        
         setMistakes(m => m + 1);
+        setCombo(0); // Reset Combo
+
         setHp(prev => {
             const newHp = Math.max(0, prev - 15);
             if (newHp <= 0) {
@@ -180,9 +203,22 @@ const SinglePlayerMatch: React.FC<SinglePlayerMatchProps> = ({ level, currentPla
                       <div className="font-bold text-yellow-400 flex items-center gap-2 text-lg md:text-xl font-mono"><Trophy size={18}/> {level}</div>
                   </div>
                   
-                  {/* Timer Display */}
-                  <div className="bg-black border-2 border-white px-2 md:px-4 py-0.5 rounded-sm font-mono text-lg md:text-2xl text-yellow-300 shadow-lg">
-                      {(currentTime / 1000).toFixed(2)}s
+                  {/* Score & Time Display */}
+                  <div className="flex flex-col items-center">
+                      <div className="bg-black/50 px-2 rounded border border-white/20 text-yellow-300 font-black font-mono text-lg md:text-xl tracking-widest relative">
+                          {score.toLocaleString()}
+                          {addedScore > 0 && (
+                            <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-green-400 text-sm font-bold animate-[moveUp_0.8s_ease-out_forwards] pointer-events-none">
+                                +{addedScore}
+                            </span>
+                          )}
+                      </div>
+                      {highScore > 0 && (
+                        <div className="text-[10px] text-gray-300 font-bold -mt-0.5 tracking-wider uppercase leading-none">
+                            Rekod: {highScore.toLocaleString()}
+                        </div>
+                      )}
+                      <div className="text-xs text-white font-mono mt-0.5">{(currentTime / 1000).toFixed(2)}s</div>
                   </div>
 
                   <div className="flex gap-1">
@@ -201,6 +237,15 @@ const SinglePlayerMatch: React.FC<SinglePlayerMatchProps> = ({ level, currentPla
                   {message && (
                       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black text-yellow-400 px-6 py-2 border-4 border-white font-bold animate-bounce z-40 whitespace-nowrap text-xl roblox-shadow font-mono">
                           {message}
+                      </div>
+                  )}
+
+                  {/* Combo Indicator */}
+                  {combo > 1 && (
+                      <div className="absolute top-2 right-10 z-50 animate-bounce">
+                          <div className="text-xl md:text-2xl font-black text-yellow-400 roblox-text-shadow -rotate-6 border-2 border-black bg-purple-500 px-2 rounded-sm">
+                              x{combo} COMBO!
+                          </div>
                       </div>
                   )}
 
@@ -269,4 +314,3 @@ const SinglePlayerMatch: React.FC<SinglePlayerMatchProps> = ({ level, currentPla
 };
 
 export default SinglePlayerMatch;
-    

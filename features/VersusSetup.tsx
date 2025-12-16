@@ -62,6 +62,8 @@ const VersusSetup: React.FC<VersusSetupProps> = ({ currentPlayer, onStart, onBac
                 hp: 100, 
                 maxUnlockedLevel: 1, 
                 stars: {},
+                scores: {},
+                mistakes: [],
                 isComputer: opponentType === 'CPU'
             },
             words: words,

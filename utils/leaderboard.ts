@@ -1,50 +1,79 @@
 
-import { Player } from '../types';
+import { Player, BattleMode } from '../types';
 import { LeaderboardEntry, VersusLeaderboardEntry } from '../types';
 
-const LB_KEY = 'clash_leaderboard';
+const LB_QUIZ_KEY = 'clash_lb_quiz';
+const LB_MATCH_KEY = 'clash_lb_match';
 const VERSUS_KEY = 'clash_leaderboard_versus';
 
-export const getLeaderboard = (level: number): LeaderboardEntry[] => {
+export const getLeaderboard = (level: number, mode: BattleMode): LeaderboardEntry[] => {
     try {
-        const data = JSON.parse(localStorage.getItem(LB_KEY) || '{}');
+        const key = mode === 'QUIZ' ? LB_QUIZ_KEY : LB_MATCH_KEY;
+        const data = JSON.parse(localStorage.getItem(key) || '{}');
         return data[level] || [];
     } catch {
         return [];
     }
 };
 
-export const saveScore = (level: number, player: Player, timeMs: number) => {
+export const saveScore = (level: number, player: Player, timeMs: number, score: number, mode: BattleMode) => {
     try {
-        const data = JSON.parse(localStorage.getItem(LB_KEY) || '{}');
+        const key = mode === 'QUIZ' ? LB_QUIZ_KEY : LB_MATCH_KEY;
+        const data = JSON.parse(localStorage.getItem(key) || '{}');
         const currentLevelScores: LeaderboardEntry[] = data[level] || [];
         
-        // Check if player already has a better score
+        // Check if player already has a better entry
         const existingIndex = currentLevelScores.findIndex(s => s.playerName === player.name);
+        
+        const newEntry: LeaderboardEntry = {
+            playerName: player.name,
+            avatar: player.avatar,
+            timeMs,
+            score,
+            date: Date.now()
+        };
+
         if (existingIndex !== -1) {
-            if (currentLevelScores[existingIndex].timeMs > timeMs) {
-                // Update with better time
-                currentLevelScores[existingIndex] = {
-                    playerName: player.name,
-                    avatar: player.avatar,
-                    timeMs,
-                    date: Date.now()
-                };
+            const existing = currentLevelScores[existingIndex];
+            
+            if (mode === 'QUIZ') {
+                // QUIZ: Higher Score is Better
+                if (score > existing.score) {
+                    currentLevelScores[existingIndex] = newEntry;
+                }
+            } else {
+                // MATCH: Lower Time is Better (if time > 0)
+                // If existing time is 0 (legacy/error), replace it.
+                // If new time is faster than existing time, replace it.
+                if (existing.timeMs === 0 || (timeMs > 0 && timeMs < existing.timeMs)) {
+                    currentLevelScores[existingIndex] = newEntry;
+                }
             }
         } else {
-             currentLevelScores.push({
-                playerName: player.name,
-                avatar: player.avatar,
-                timeMs,
-                date: Date.now()
-            });
+             currentLevelScores.push(newEntry);
         }
 
-        // Sort by time (ascending) - REMOVED SLICE TO SHOW ALL SCORES
-        const sorted = currentLevelScores.sort((a, b) => a.timeMs - b.timeMs);
+        // Sorting Logic
+        let sorted = [];
+        if (mode === 'QUIZ') {
+            // Sort by Score DESC, then Time ASC
+            sorted = currentLevelScores.sort((a, b) => {
+                const scoreA = a.score || 0;
+                const scoreB = b.score || 0;
+                if (scoreA !== scoreB) return scoreB - scoreA;
+                return a.timeMs - b.timeMs;
+            });
+        } else {
+            // Sort by Time ASC, then Score DESC
+            sorted = currentLevelScores.sort((a, b) => {
+                // Filter out 0 times (invalid) for sorting if necessary, but assuming valid data:
+                if (a.timeMs !== b.timeMs) return a.timeMs - b.timeMs;
+                return b.score - a.score;
+            });
+        }
         
         data[level] = sorted;
-        localStorage.setItem(LB_KEY, JSON.stringify(data));
+        localStorage.setItem(key, JSON.stringify(data));
     } catch (e) {
         console.error("Failed to save score", e);
     }
