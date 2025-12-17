@@ -200,11 +200,50 @@ function App() {
 
   if (appState === 'SPLASH') {
       return (
-          <div className="h-[100dvh] w-full bg-amber-500 flex flex-col items-center justify-center animate-fadeIn select-none overflow-hidden cursor-pointer" onClick={() => setAppState('USER_SELECT')}>
-              <div className="text-9xl mb-8 animate-bounce drop-shadow-2xl">⚔️</div>
-              <h1 className="text-6xl md:text-8xl font-black text-white uppercase tracking-widest drop-shadow-md mb-4 text-center px-4 leading-none">Pertarungan Kata</h1>
-              <div className="text-amber-900 font-bold uppercase tracking-wide text-2xl md:text-3xl mb-12 bg-white/20 px-6 py-2 rounded-sm backdrop-blur-sm">Edisi Bahasa Melayu</div>
-              <div className="animate-pulse text-white font-black text-3xl md:text-5xl tracking-widest bg-black/20 px-8 py-4 rounded-sm border-4 border-white/20">Tekan untuk Mula</div>
+          <div 
+            className="h-[100dvh] w-full bg-sky-500 flex flex-col items-center justify-center animate-fadeIn select-none overflow-hidden cursor-pointer relative" 
+            onClick={() => setAppState('USER_SELECT')}
+            style={{
+                backgroundImage: 'radial-gradient(#00000033 20%, transparent 20%), radial-gradient(#00000033 20%, transparent 20%)',
+                backgroundPosition: '0 0, 10px 10px',
+                backgroundSize: '20px 20px'
+            }}
+          >
+              {/* Floating Avatars Background */}
+              <div className="absolute top-10 left-10 animate-[bounce_3s_infinite] rotate-12">
+                   <PlayerAvatar avatar="noob" size="lg" className="border-4 border-black" />
+              </div>
+              <div className="absolute bottom-20 right-10 animate-[bounce_4s_infinite] -rotate-12">
+                   <PlayerAvatar avatar="bacon" size="lg" className="border-4 border-black" />
+              </div>
+
+              {/* Title Section */}
+              <div className="transform -rotate-6 mb-12 relative z-10">
+                  <div className="bg-white border-4 border-black p-4 shadow-[10px_10px_0px_0px_rgba(0,0,0,0.5)]">
+                      <h1 className="text-6xl md:text-8xl font-black text-gray-900 uppercase tracking-widest leading-none" style={{ fontFamily: 'Arial Black, sans-serif' }}>
+                          KATA<br/>
+                          <span className="text-red-600">BLOX</span>
+                      </h1>
+                  </div>
+              </div>
+
+              {/* Subtitle */}
+              <div className="bg-black/80 px-4 py-2 rounded-sm mb-12 backdrop-blur-sm transform rotate-2">
+                  <span className="text-yellow-400 font-bold uppercase tracking-[0.2em] text-xl md:text-2xl font-mono">
+                      Edisi Bahasa Melayu
+                  </span>
+              </div>
+
+              {/* Start Button (Roblox Style Green) */}
+              <button 
+                className="animate-pulse bg-[#00b06f] hover:bg-[#009e63] text-white font-black text-3xl md:text-5xl px-12 py-6 rounded-lg border-b-8 border-[#008253] active:border-b-0 active:translate-y-2 transition-all shadow-xl font-sans"
+              >
+                  TEKAN MULA ▶
+              </button>
+              
+              <div className="absolute bottom-4 text-white/50 text-xs font-bold uppercase tracking-widest">
+                  Inspired by Roblox • Educational Game
+              </div>
           </div>
       );
   }

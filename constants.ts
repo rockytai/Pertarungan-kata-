@@ -29,58 +29,58 @@ export const getNextLevelXp = (level: number) => level * XP_BASE;
 export const WORLDS: World[] = [
   { 
     id: 1, 
-    name: "Kampung Permulaan (新手村)", 
-    enemy: "Si Bulat (小圆怪)", 
+    name: "Kampung Noob (新手村)", 
+    enemy: "Raja Bacon (培根王)", 
     hp: 40, 
-    img: "slime", 
-    theme: "bg-green-600", 
-    bgPattern: "bg-green-500", 
-    desc: "Langkah pertama anda.",
-    textColor: "text-green-100"
+    img: "bacon", 
+    theme: "bg-yellow-400", 
+    bgPattern: "bg-yellow-500", 
+    desc: "Tempat lahirnya legenda.",
+    textColor: "text-yellow-900"
   },
   { 
     id: 2, 
-    name: "Hutan Belantara (原始森林)", 
-    enemy: "Harimau Kumbang (黑豹)", 
+    name: "Laluan Obby (跑酷森林)", 
+    enemy: "Parkour Master (跑酷大师)", 
     hp: 80, 
-    img: "panther", 
-    theme: "bg-emerald-800", 
-    bgPattern: "bg-emerald-700", 
-    desc: "Awas binatang buas!",
-    textColor: "text-emerald-100"
+    img: "ninja", 
+    theme: "bg-emerald-500", 
+    bgPattern: "bg-emerald-600", 
+    desc: "Jangan jatuh ke bawah!",
+    textColor: "text-emerald-900"
   },
   { 
     id: 3, 
-    name: "Kota Raya (繁华都市)", 
-    enemy: "Robot Besi (铁甲机器人)", 
+    name: "Kota Tycoon (大亨城)", 
+    enemy: "Biznesman (商业大亨)", 
     hp: 120, 
-    img: "mech", 
-    theme: "bg-blue-700", 
+    img: "rich_boy", 
+    theme: "bg-blue-500", 
     bgPattern: "bg-blue-600", 
     desc: "Dunia moden yang sibuk.",
     textColor: "text-blue-100"
   },
   { 
     id: 4, 
-    name: "Gunung Berapi (火山地带)", 
-    enemy: "Raksasa Api (火焰怪)", 
+    name: "Lantai Lava (熔岩关卡)", 
+    enemy: "Raksasa Magma (岩浆怪)", 
     hp: 160, 
     img: "magma", 
-    theme: "bg-red-800", 
-    bgPattern: "bg-red-700", 
-    desc: "Panas dan berbahaya!",
-    textColor: "text-red-100"
+    theme: "bg-orange-600", 
+    bgPattern: "bg-orange-700", 
+    desc: "Lantai itu Lava!",
+    textColor: "text-orange-100"
   },
   { 
     id: 5, 
-    name: "Istana Angkasa (天空之城)", 
-    enemy: "Raja Langit (天空之王)", 
+    name: "Markas Admin (管理员基地)", 
+    enemy: "Ban Hammer (封号锤)", 
     hp: 200, 
-    img: "king", 
-    theme: "bg-purple-800", 
-    bgPattern: "bg-purple-700", 
-    desc: "Cabaran terakhir.",
-    textColor: "text-purple-100"
+    img: "robot_2", 
+    theme: "bg-slate-800", 
+    bgPattern: "bg-slate-900", 
+    desc: "Zon Larangan.",
+    textColor: "text-slate-100"
   }
 ];
 
