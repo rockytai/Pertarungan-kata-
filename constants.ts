@@ -21,6 +21,10 @@ export const AVATARS = [
 ];
 
 export const TOTAL_LEVELS = 50;
+export const XP_BASE = 200; // Base XP required for Level 1 -> 2
+
+// Formula: Level * XP_BASE (e.g., Lvl 1 needs 200, Lvl 2 needs 400)
+export const getNextLevelXp = (level: number) => level * XP_BASE;
 
 export const WORLDS: World[] = [
   { 

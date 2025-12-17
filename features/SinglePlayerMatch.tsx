@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import Button from '../components/Button';
 import PlayerAvatar from '../components/PlayerAvatar';
@@ -7,12 +6,13 @@ import { ArrowLeft, Trophy, Heart } from '../components/Icons';
 import { Player } from '../types';
 import { WORLDS, getWordsForLevel } from '../constants';
 import { AudioEngine } from '../utils/audio';
+import { formatTime } from '../utils/leaderboard';
 
 interface SinglePlayerMatchProps {
   level: number;
   currentPlayer: Player;
-  highScore: number;
-  onWin: (mistakes: number, timeMs: number, score: number) => void;
+  bestTimeMs: number;
+  onWin: (mistakes: number, timeMs: number) => void;
   onLose: () => void;
   onExit: () => void;
   onAddMistake: (wordId: number) => void;
@@ -34,7 +34,7 @@ const NameTag = ({ name }: { name: string }) => (
     </div>
 );
 
-const SinglePlayerMatch: React.FC<SinglePlayerMatchProps> = ({ level, currentPlayer, highScore, onWin, onLose, onExit, onAddMistake }) => {
+const SinglePlayerMatch: React.FC<SinglePlayerMatchProps> = ({ level, currentPlayer, bestTimeMs, onWin, onLose, onExit, onAddMistake }) => {
     const world = WORLDS.find(w => w.id === Math.ceil(level / 10));
     if (!world) return <div>World not found</div>;
 
@@ -55,11 +55,6 @@ const SinglePlayerMatch: React.FC<SinglePlayerMatchProps> = ({ level, currentPla
     const [mistakes, setMistakes] = useState(0);
     const [matchesFound, setMatchesFound] = useState(0);
     
-    // Scoring
-    const [score, setScore] = useState(0);
-    const [combo, setCombo] = useState(0);
-    const [addedScore, setAddedScore] = useState(0);
-
     // Animations
     const [message, setMessage] = useState("");
     const [anim, setAnim] = useState<'damage' | 'attack' | 'win' | null>(null);
@@ -124,15 +119,6 @@ const SinglePlayerMatch: React.FC<SinglePlayerMatchProps> = ({ level, currentPla
         AudioEngine.playAttack();
         setSelectedCardId(null);
 
-        // Score logic
-        const basePoints = 1200;
-        const comboBonus = combo * 300;
-        const points = basePoints + comboBonus;
-        setScore(prev => prev + points);
-        setCombo(prev => prev + 1);
-        setAddedScore(points);
-        setTimeout(() => setAddedScore(0), 800);
-
         // Mark matched
         setCards(prev => prev.map(c => 
             (c.id === c1.id || c.id === c2.id) ? { ...c, isMatched: true } : c
@@ -149,8 +135,8 @@ const SinglePlayerMatch: React.FC<SinglePlayerMatchProps> = ({ level, currentPla
                  setMessage("MENANG! (胜利!)");
                  setTimeout(() => {
                      AudioEngine.playWin();
-                     // Use callback value for score to ensure latest
-                     onWin(mistakes, currentTime, score + points);
+                     // Pass 0 score, only time matters
+                     onWin(mistakes, currentTime);
                  }, 1000);
             } else {
                 setAnim('attack');
@@ -164,12 +150,11 @@ const SinglePlayerMatch: React.FC<SinglePlayerMatchProps> = ({ level, currentPla
         AudioEngine.playDamage();
         setErrorCardIds([c1.id, c2.id]);
         
-        // Record both cards involved as they were confusing for the user
+        // Record both cards involved
         onAddMistake(c1.wordId);
         onAddMistake(c2.wordId);
         
         setMistakes(m => m + 1);
-        setCombo(0); // Reset Combo
 
         setHp(prev => {
             const newHp = Math.max(0, prev - 15);
@@ -197,28 +182,26 @@ const SinglePlayerMatch: React.FC<SinglePlayerMatchProps> = ({ level, currentPla
     return (
         <div className={`h-[100dvh] bg-sky-300 flex flex-col overflow-hidden select-none ${shake ? 'animate-shake' : ''}`}>
              {/* Top Bar */}
-             <div className="bg-gray-900 border-b-4 border-black text-white p-1 px-2 flex justify-between items-center z-10 shadow-lg shrink-0 h-12 md:h-16">
+             <div className="bg-gray-900 border-b-4 border-black text-white p-1 px-2 flex justify-between items-center z-10 shadow-lg shrink-0 h-16 md:h-20">
                   <div className="flex items-center gap-2">
                       <Button variant="secondary" onClick={onExit} className="px-2 py-1 text-xs mb-0 h-8 md:h-10"><ArrowLeft size={16}/></Button>
                       <div className="font-bold text-yellow-400 flex items-center gap-2 text-lg md:text-xl font-mono"><Trophy size={18}/> {level}</div>
                   </div>
                   
-                  {/* Score & Time Display */}
-                  <div className="flex flex-col items-center">
-                      <div className="bg-black/50 px-2 rounded border border-white/20 text-yellow-300 font-black font-mono text-lg md:text-xl tracking-widest relative">
-                          {score.toLocaleString()}
-                          {addedScore > 0 && (
-                            <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-green-400 text-sm font-bold animate-[moveUp_0.8s_ease-out_forwards] pointer-events-none">
-                                +{addedScore}
-                            </span>
-                          )}
+                  {/* Time Display (Main Focus) */}
+                  <div className="flex flex-col items-center flex-1">
+                      <div className="bg-black/50 px-4 py-1 rounded border-2 border-white/20 text-white font-black font-mono text-3xl md:text-4xl tracking-widest relative">
+                          {formatTime(currentTime)}
                       </div>
-                      {highScore > 0 && (
-                        <div className="text-[10px] text-gray-300 font-bold -mt-0.5 tracking-wider uppercase leading-none">
-                            Rekod: {highScore.toLocaleString()}
+                      {bestTimeMs > 0 ? (
+                        <div className="text-xs text-green-400 font-bold mt-1 tracking-wider uppercase leading-none bg-black/40 px-2 py-0.5 rounded">
+                            Rekod: {formatTime(bestTimeMs)}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-gray-400 font-bold mt-1 tracking-wider uppercase">
+                            Tiada Rekod
                         </div>
                       )}
-                      <div className="text-xs text-white font-mono mt-0.5">{(currentTime / 1000).toFixed(2)}s</div>
                   </div>
 
                   <div className="flex gap-1">
@@ -237,15 +220,6 @@ const SinglePlayerMatch: React.FC<SinglePlayerMatchProps> = ({ level, currentPla
                   {message && (
                       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black text-yellow-400 px-6 py-2 border-4 border-white font-bold animate-bounce z-40 whitespace-nowrap text-xl roblox-shadow font-mono">
                           {message}
-                      </div>
-                  )}
-
-                  {/* Combo Indicator */}
-                  {combo > 1 && (
-                      <div className="absolute top-2 right-10 z-50 animate-bounce">
-                          <div className="text-xl md:text-2xl font-black text-yellow-400 roblox-text-shadow -rotate-6 border-2 border-black bg-purple-500 px-2 rounded-sm">
-                              x{combo} COMBO!
-                          </div>
                       </div>
                   )}
 
@@ -297,7 +271,7 @@ const SinglePlayerMatch: React.FC<SinglePlayerMatchProps> = ({ level, currentPla
                                             ? 'bg-red-500 border-red-900 text-white animate-shake'
                                             : isSelected 
                                                 ? 'bg-yellow-300 border-yellow-600 text-black -translate-y-1' 
-                                                : 'bg-white border-black text-black hover:bg-gray-50 active:translate-y-1 active:border-b-4 active:shadow-none'
+                                                : 'bg-sky-100 border-black text-black hover:bg-sky-200 active:translate-y-1 active:border-b-4 active:shadow-none'
                                     }
                                 `}
                             >

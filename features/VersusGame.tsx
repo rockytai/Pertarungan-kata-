@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import PlayerAvatar from '../components/PlayerAvatar';
+import { ArrowLeft } from '../components/Icons';
 import { VersusConfig, Word, Player } from '../types';
 import { generateOptions } from '../constants';
 import { AudioEngine } from '../utils/audio';
@@ -246,18 +247,24 @@ const VersusGame: React.FC<VersusGameProps> = ({ config, onExit, onGameOver }) =
             </div>
 
             {/* CENTER INFO BAR */}
-            <div className="h-10 md:h-12 bg-gray-900 z-10 flex items-center justify-between px-4 border-y-4 border-black text-white font-mono font-bold shrink-0">
-                <div>
-                    {config.mode === 'RACE_TO_10' ? (
-                         <span className="text-yellow-400">RACE: 10</span>
-                    ) : (
-                         <span className={`${timeLeft < 10 ? 'text-red-500 animate-pulse' : 'text-green-400'}`}>
-                             TIME: {timeLeft}s
-                         </span>
-                    )}
+            <div className="h-10 md:h-12 bg-gray-900 z-10 flex items-center justify-between px-2 border-y-4 border-black text-white font-mono font-bold shrink-0">
+                <Button variant="secondary" onClick={onExit} className="px-2 py-0 text-xs mb-0 h-8 w-10 flex items-center justify-center min-w-[32px] shrink-0">
+                    <ArrowLeft size={16}/>
+                </Button>
+
+                <div className="flex-1 flex items-center justify-around px-2">
+                    <div>
+                        {config.mode === 'RACE_TO_10' ? (
+                            <span className="text-yellow-400 text-xs md:text-sm whitespace-nowrap">RACE: 10</span>
+                        ) : (
+                            <span className={`${timeLeft < 10 ? 'text-red-500 animate-pulse' : 'text-green-400'} text-xs md:text-sm whitespace-nowrap`}>
+                                TIME: {timeLeft}s
+                            </span>
+                        )}
+                    </div>
+                    <div className="bg-white text-black px-2 rounded-sm text-xs font-black border-2 border-black tracking-widest hidden sm:block">VS</div>
+                    <div className="text-xs md:text-sm whitespace-nowrap">LVL {config.words[0]?.level || '?'}</div>
                 </div>
-                <div className="bg-white text-black px-2 rounded-sm text-xs font-black border-2 border-black tracking-widest">VS</div>
-                <div>LEVEL: {config.words[0]?.level || '?'}</div>
             </div>
 
             {/* PLAYER 1 AREA */}

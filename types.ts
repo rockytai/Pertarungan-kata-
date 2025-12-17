@@ -14,6 +14,11 @@ export interface Player {
   stars: Record<number, number>;
   scores: Record<number, number>; // Best score for each level
   mistakes: number[]; // Array of Word IDs that were answered incorrectly
+  
+  // RPG Leveling System
+  xp: number;         // Current XP progress
+  playerLevel: number; // Current Player Level (e.g. 1, 2, 50)
+
   // Runtime properties for versus mode
   score?: number;
   hp?: number;
@@ -46,6 +51,7 @@ export type AppState =
   | 'MENU' 
   | 'WORLD_SELECT' 
   | 'LEVEL_SELECT' 
+  | 'STUDY_PHASE'
   | 'MODE_SELECT'
   | 'LEADERBOARD_VIEW'
   | 'BATTLE' 
@@ -76,4 +82,7 @@ export interface BattleResult {
   stars: number;
   timeMs?: number;
   score?: number;
+  // XP Results
+  xpGained: number;
+  isLevelUp: boolean;
 }

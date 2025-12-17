@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
 import Button from '../components/Button';
@@ -64,6 +65,8 @@ const VersusSetup: React.FC<VersusSetupProps> = ({ currentPlayer, onStart, onBac
                 stars: {},
                 scores: {},
                 mistakes: [],
+                xp: 0,
+                playerLevel: 1,
                 isComputer: opponentType === 'CPU'
             },
             words: words,
