@@ -42,6 +42,9 @@ const SinglePlayerBattle: React.FC<SinglePlayerBattleProps> = ({ level, currentP
     const startLvl = (world.id - 1) * 10 + 1;
     const enemyMaxHP = world.hp + ((level - startLvl) * 5);
     
+    // Calculate Player Total Score
+    const playerTotalScore = Object.values(currentPlayer.scores).reduce((acc: number, curr: number) => acc + curr, 0);
+
     // Game State
     const [timeLeft, setTimeLeft] = useState(MAX_TIME_MS);
     const [isTimerActive, setIsTimerActive] = useState(false);
@@ -235,7 +238,10 @@ const SinglePlayerBattle: React.FC<SinglePlayerBattleProps> = ({ level, currentP
               <div className="bg-gray-900 border-b-4 border-black text-white p-1 flex justify-between items-center z-10 shadow-lg shrink-0 h-12">
                   <div className="flex items-center gap-2">
                       <Button variant="secondary" onClick={onExit} className="px-2 py-1 text-xs mb-0 h-8"><ArrowLeft size={16}/></Button>
-                      <div className="font-bold text-yellow-400 flex items-center gap-2 text-lg font-mono"><Trophy size={18}/> LVL {level}</div>
+                      <div className="flex flex-col items-start leading-none">
+                          <div className="font-bold text-yellow-400 flex items-center gap-1 text-sm font-mono"><Trophy size={14}/> LVL {level}</div>
+                          <div className="text-[10px] text-gray-400 font-bold tracking-wider">TOTAL: {playerTotalScore.toLocaleString()}</div>
+                      </div>
                   </div>
                   
                   {/* Score Display */}

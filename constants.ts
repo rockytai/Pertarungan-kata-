@@ -1,30 +1,76 @@
 
-import { World, Word } from './types';
+import { World, Word, Achievement, Player } from './types';
 
 export const AVATARS = [
-  "noob", 
-  "bacon", 
-  "guest", 
-  "girl_pink", 
-  "girl_purple",
-  "cool_boy", 
-  "boy_blue",
-  "ninja", 
-  "knight", 
-  "pirate",
-  "wizard", 
-  "rich_boy", 
-  "zombie_survivor",
-  "alien",
-  "robot_2",
-  "cat_hoodie"
+  "noob", "bacon", "guest", "girl_pink", "girl_purple",
+  "cool_boy", "boy_blue", "ninja", "knight", "pirate",
+  "wizard", "rich_boy", "zombie_survivor", "alien",
+  "robot_2", "cat_hoodie"
 ];
 
 export const TOTAL_LEVELS = 50;
-export const XP_BASE = 200; // Base XP required for Level 1 -> 2
+export const XP_BASE = 200; 
 
-// Formula: Level * XP_BASE (e.g., Lvl 1 needs 200, Lvl 2 needs 400)
 export const getNextLevelXp = (level: number) => level * XP_BASE;
+
+export const RANKS = [
+  { minLevel: 1, name: "Noob", color: "text-yellow-600", bg: "bg-yellow-200" },
+  { minLevel: 5, name: "Guest", color: "text-gray-600", bg: "bg-gray-200" },
+  { minLevel: 10, name: "Explorer", color: "text-blue-600", bg: "bg-blue-100" },
+  { minLevel: 20, name: "Pro", color: "text-green-600", bg: "bg-green-100" },
+  { minLevel: 30, name: "Master", color: "text-purple-600", bg: "bg-purple-100" },
+  { minLevel: 40, name: "Legend", color: "text-orange-600", bg: "bg-orange-100" },
+  { minLevel: 50, name: "Admin", color: "text-red-600", bg: "bg-red-100" }
+];
+
+export const getPlayerRank = (level: number) => {
+  return [...RANKS].reverse().find(r => level >= r.minLevel) || RANKS[0];
+};
+
+export const ACHIEVEMENTS: Achievement[] = [
+  { 
+    id: "first_win", 
+    name: "Wira Bermula", 
+    desc: "Menang pertempuran pertama.", 
+    icon: "⭐", 
+    condition: (p) => p.maxUnlockedLevel > 1 
+  },
+  { 
+    id: "world_2", 
+    name: "Penjelajah Obby", 
+    desc: "Buka Dunia 2: Laluan Obby.", 
+    icon: "🏃", 
+    condition: (p) => p.maxUnlockedLevel >= 11 
+  },
+  { 
+    id: "perfect_star", 
+    name: "Bintang Sempurna", 
+    desc: "Dapat 3 bintang dalam mana-mana tahap.", 
+    icon: "🌟", 
+    condition: (p) => Object.values(p.stars).some(s => s === 3) 
+  },
+  { 
+    id: "level_10", 
+    name: "Remaja Blox", 
+    desc: "Capai Player Level 10.", 
+    icon: "🆙", 
+    condition: (p) => p.playerLevel >= 10 
+  },
+  { 
+    id: "tycoon_master", 
+    name: "Raja Tycoon", 
+    desc: "Buka Dunia 3: Kota Tycoon.", 
+    icon: "💰", 
+    condition: (p) => p.maxUnlockedLevel >= 21 
+  },
+  { 
+    id: "word_collector", 
+    name: "Pencinta Kamus", 
+    desc: "Selesaikan 30 tahap berbeza.", 
+    icon: "📚", 
+    condition: (p) => Object.keys(p.stars).length >= 30 
+  }
+];
 
 export const WORLDS: World[] = [
   { 

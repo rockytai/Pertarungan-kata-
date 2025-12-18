@@ -67,6 +67,8 @@ const VersusSetup: React.FC<VersusSetupProps> = ({ currentPlayer, onStart, onBac
                 mistakes: [],
                 xp: 0,
                 playerLevel: 1,
+                // Added missing achievements property to satisfy Player type
+                achievements: [],
                 isComputer: opponentType === 'CPU'
             },
             words: words,

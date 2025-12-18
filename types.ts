@@ -6,20 +6,27 @@ export interface Word {
   level: number;
 }
 
+export interface Achievement {
+  id: string;
+  name: string;
+  desc: string;
+  icon: string;
+  condition: (player: Player) => boolean;
+}
+
 export interface Player {
   id: number;
   name: string;
   avatar: string;
   maxUnlockedLevel: number;
   stars: Record<number, number>;
-  scores: Record<number, number>; // Best score for each level
-  mistakes: number[]; // Array of Word IDs that were answered incorrectly
+  scores: Record<number, number>; 
+  mistakes: number[]; 
+  achievements: string[]; // List of unlocked achievement IDs
   
-  // RPG Leveling System
-  xp: number;         // Current XP progress
-  playerLevel: number; // Current Player Level (e.g. 1, 2, 50)
+  xp: number;         
+  playerLevel: number; 
 
-  // Runtime properties for versus mode
   score?: number;
   hp?: number;
   isComputer?: boolean;
@@ -42,7 +49,7 @@ export interface VersusConfig {
   p2: Player;
   words: Word[];
   mode: 'RACE_TO_10' | 'TIME_ATTACK';
-  difficultyAI: 'EASY' | 'MEDIUM' | 'HARD'; // AI smartness independent of question range
+  difficultyAI: 'EASY' | 'MEDIUM' | 'HARD'; 
 }
 
 export type AppState = 
@@ -58,6 +65,7 @@ export type AppState =
   | 'MISTAKE_REVIEW'
   | 'VERSUS_SETUP' 
   | 'VERSUS_GAME' 
+  | 'ACHIEVEMENTS'
   | 'RESULT';
 
 export type BattleMode = 'QUIZ' | 'MATCH';
@@ -82,7 +90,7 @@ export interface BattleResult {
   stars: number;
   timeMs?: number;
   score?: number;
-  // XP Results
   xpGained: number;
   isLevelUp: boolean;
+  newAchievements?: string[];
 }

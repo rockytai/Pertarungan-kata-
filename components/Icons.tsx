@@ -109,20 +109,26 @@ export const Users = (props: any) => (
   </IconWrapper>
 );
 
+// Added missing UserPlus icon
 export const UserPlus = (props: any) => (
-    <IconWrapper {...props}>
-      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="8.5" cy="7" r="4" />
-      <line x1="20" y1="8" x2="20" y2="14" />
-      <line x1="23" y1="11" x2="17" y2="11" />
-    </IconWrapper>
+  <IconWrapper {...props}>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="8.5" cy="7" r="4" />
+    <line x1="20" y1="8" x2="20" y2="14" />
+    <line x1="23" y1="11" x2="17" y2="11" />
+  </IconWrapper>
 );
 
-export const MapIcon = (props: any) => (
+export const Award = (props: any) => (
   <IconWrapper {...props}>
-    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
-    <line x1="8" y1="2" x2="8" y2="18" />
-    <line x1="16" y1="6" x2="16" y2="22" />
+    <circle cx="12" cy="8" r="7" />
+    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+  </IconWrapper>
+);
+
+export const Zap = (props: any) => (
+  <IconWrapper {...props}>
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
   </IconWrapper>
 );
 
